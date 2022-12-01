@@ -2,7 +2,9 @@ import random
 import pandas as pd
 import simpy
 import numpy as np
+import matplotlib.pyplot as plt
 from scipy.stats import ttest_ind
+
 
 
 def arrivals(env, n_costumers, lambd, mu, server, wait_times):
@@ -42,14 +44,15 @@ def welchs_test(groupA, groupB):
 
 
 if __name__ == '__main__':
-    lambd = 0.9  # arrival rate
     mu = 1  # server capacity (rate, e.g. 1.2 customers/unit time)
-
-    n_servers = [1, 2, 4]
+    
+    n_servers_values = [1, 2, 4]
     n_customers = 1000
 
+    # Perform Statistical test with 2 vs. 1 server and 4 vs. 1 server
     df = pd.DataFrame()
-
+    lambd = 0.9
+    
     for c in n_servers:
         lambd_c = lambd*c
         wait_times = experiment(lambd_c, mu, c, n_customers)
@@ -62,5 +65,34 @@ if __name__ == '__main__':
     res4 = welchs_test(df["4"], df["1"])
     print("Welch test results 2 vs 1: ", res2.statistic, ", p-value: ", res2.pvalue)
     print("Welch test results 4 vs 1: ", res4.statistic, ", p-value: ", res4.pvalue)
+    
+    
+    # Plot Simulations for different lambdas 
+    lambd_values = np.arange(0.2, 1, 0.05)
+    n_simulations = 25
+    data = np.zeros((len(n_servers_values), len(lambd_values), n_simulations, n_customers))
 
+
+    for servers_i, n_servers in enumerate(n_servers_values):
+        for lambd_i, lambd in enumerate(lambd_values):
+            for simulation in range(n_simulations):
+                lambd_c = lambd*n_servers
+                wait_times = experiment(lambd_c, mu, n_servers, n_customers)
+                data[servers_i, lambd_i, simulation] = wait_times
+               
+   
+    print(data)
+    all_means = []
+    for n_servers in data:
+        all_means.append(np.mean(n_servers, axis=(1, 2)))
+        
+    for i, mean in enumerate(all_means):
+        plt.plot(lambd_values, mean, "-o", label=n_servers_values[i])
+    plt.legend(title="Number of servers")
+    plt.title("Simulated mean waiting times")
+    plt.ylabel("Average waiting times E(W)")
+    plt.xlabel(r"Occupation rates of a single server ($\rho$)")
+    plt.savefig("figures/Simulated_waiting_times.png")
+    
+    plt.show()
 
