@@ -1,5 +1,4 @@
 import random
-
 import pandas as pd
 import simpy
 import numpy as np
@@ -13,7 +12,7 @@ def arrivals(env, n_costumers, lambd, mu, server, wait_times):
         yield env.timeout(inter_arrival_time)
 
 
-def event(env, name, server, mu, wait_times):
+def event(env, server, mu, wait_times):
     arrive = env.now
 
     with server.request() as req:
@@ -33,6 +32,7 @@ def experiment(l, mu, n_servers, n_costumers):
     env.process(arrivals(env, n_costumers, l, mu, server, wait_times))
     env.run()
     return wait_times
+
 
 if __name__ == '__main__':
     lambd = 1  # arrival rate
