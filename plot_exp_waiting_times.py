@@ -13,7 +13,6 @@ def expected_waiting_time(c, p, mu):
     """Equation 5.3 from Queuing Theory Background Material 2 (page 44)"""
     return delay_probability(c, p ) * 1/ (1 - p) * 1/(c * mu)
 
-
 def plot_expected_wait_times():
     occupation_rates = np.arange(0,1,0.05)
     plt.plot(occupation_rates, expected_waiting_time(1, occupation_rates, 1), 'o-', label="1 Server")
