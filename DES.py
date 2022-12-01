@@ -29,7 +29,6 @@ def event(env, server, mu, wait_times):
 
 
 def experiment(l, mu, n_servers, n_customers):
-    print("Rho = ", np.round(l / (mu*n_servers), 3))
     wait_times = []
     env = simpy.Environment()
     server = simpy.Resource(env, capacity=n_servers)
@@ -53,7 +52,7 @@ if __name__ == '__main__':
     df = pd.DataFrame()
     lambd = 0.9
     
-    for c in n_servers:
+    for c in n_servers_values:
         lambd_c = lambd*c
         wait_times = experiment(lambd_c, mu, c, n_customers)
         df[f"{c}"] = wait_times
@@ -72,16 +71,15 @@ if __name__ == '__main__':
     n_simulations = 25
     data = np.zeros((len(n_servers_values), len(lambd_values), n_simulations, n_customers))
 
-
     for servers_i, n_servers in enumerate(n_servers_values):
+        print("Number of servers : ", n_servers)
         for lambd_i, lambd in enumerate(lambd_values):
+            lambd_c = lambd * n_servers
+            print("Rho = ", np.round(lambd_c / (mu * n_servers), 3))
             for simulation in range(n_simulations):
-                lambd_c = lambd*n_servers
                 wait_times = experiment(lambd_c, mu, n_servers, n_customers)
                 data[servers_i, lambd_i, simulation] = wait_times
                
-   
-    print(data)
     all_means = []
     for n_servers in data:
         all_means.append(np.mean(n_servers, axis=(1, 2)))
