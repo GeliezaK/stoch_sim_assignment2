@@ -2,6 +2,7 @@ import random
 import pandas as pd
 import simpy
 import numpy as np
+from scipy.stats import ttest_ind
 
 
 def arrivals(env, n_costumers, lambd, mu, server, wait_times):
@@ -24,6 +25,7 @@ def event(env, server, mu, wait_times):
 
         yield env.timeout(service_duration)
 
+
 def experiment(l, mu, n_servers, n_customers):
     print("Rho = ", np.round(l / (mu*n_servers), 3))
     wait_times = []
@@ -32,6 +34,11 @@ def experiment(l, mu, n_servers, n_customers):
     env.process(arrivals(env, n_customers, l, mu, server, wait_times))
     env.run()
     return wait_times
+
+
+def welchs_test(groupA, groupB):
+    """Perform Welch's t-test since the variances are not equal accross groups. """
+    return ttest_ind(groupA, groupB, equal_var=False)
 
 
 if __name__ == '__main__':
@@ -43,12 +50,17 @@ if __name__ == '__main__':
 
     df = pd.DataFrame()
 
-    for ind, c in enumerate(n_servers):
+    for c in n_servers:
         lambd_c = lambd*c
         wait_times = experiment(lambd_c, mu, c, n_customers)
         df[f"{c}"] = wait_times
 
-    print(df)
-    print(df.mean())
+    print("Var: \n", df.var())
+    print("Mean: \n", df.mean())
+
+    res2 = welchs_test(df["2"], df["1"])
+    res4 = welchs_test(df["4"], df["1"])
+    print("Welch test results 2 vs 1: ", res2.statistic, ", p-value: ", res2.pvalue)
+    print("Welch test results 4 vs 1: ", res4.statistic, ", p-value: ", res4.pvalue)
 
 

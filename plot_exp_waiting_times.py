@@ -11,7 +11,7 @@ def delay_probability(c, p):
 
 def expected_waiting_time(c, p, mu):
     """Equation 5.3 from Queuing Theory Background Material 2 (page 44)"""
-    return delay_probability(c, p ) * 1/ (1 - p) * 1/(c * mu)
+    return delay_probability(c, p) * 1/ (1 - p) * 1/(c * mu)
 
 
 def plot_expected_wait_times():
