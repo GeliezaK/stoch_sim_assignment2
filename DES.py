@@ -62,7 +62,7 @@ def statistical_analysis():
 def simulate():
     """Simulate multiple times for different rhos/lambdas and numbers of servers. Return the average waiting times of
      each configuration."""
-    lambd_values = np.arange(0.2, 1, 0.05) #effectively, this manipulates rho values since mu is always constant
+    lambd_values = np.arange(0.05, 1, 0.05) #effectively, this manipulates rho values since mu is always constant
     n_simulations = 25
     data = np.zeros((len(n_servers_values), len(lambd_values), n_simulations, n_customers))
     for servers_i, n_servers in enumerate(n_servers_values):
@@ -85,6 +85,7 @@ def plot_results(lambd_values, all_means):
     for i, mean in enumerate(all_means):
         plt.plot(lambd_values, mean, "-o", label=n_servers_values[i]) #lambda values are equal to rho values since we keep mu=1
     plt.legend(title="Number of servers")
+    plt.xticks(np.arange(0,1.1,0.1))
     plt.title("Simulated Average Waiting Times")
     plt.ylabel("Average waiting times E(W)")
     plt.xlabel(r"Occupation rates of a single server ($\rho$)")
