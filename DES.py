@@ -28,6 +28,8 @@ def event(env, server, mu, wait_times):
 
 
 def experiment(l, mu, n_servers, n_customers):
+    """Run a single DES simulation with the parameters rho=l/mu, number of servers n_servers and number of customers
+    n_customers. Return a list (of size n_customers) that stores the waiting times per customer. """
     wait_times = []
     env = simpy.Environment()
     server = simpy.Resource(env, capacity=n_servers)
