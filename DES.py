@@ -6,6 +6,32 @@ import matplotlib.pyplot as plt
 from scipy.stats import ttest_ind
 
 
+def markov_sampler(lambd):
+    """Return a value from a Markov distribution A(t) = 1 - e^(-lambd*t)."""
+    return random.expovariate(lambd)
+
+
+def constant_sampler(value):
+    """Return a value from the deterministic distribution, i.e. the constant value."""
+    return value
+
+
+def hyperexp_sampler(distribution, lambdas):
+    """Return a composed exponential distribution.
+
+    :param distribution: array-like, contains the cumulative probabilities for each exponential distribution.
+    :param lambdas: array-like, contains the lambdas for each exponential distribution."""
+
+    assert len(distribution) == len(lambdas)
+    # Assert that distrtibution contains cumulative values
+    assert all(0 < p <= 1 for p in distribution)
+
+    # Draw random number from (0,1)
+    rand = random.random()
+    ind = np.argmax(np.array(distribution) > rand)
+    return random.expovariate(lambdas[ind])
+
+
 def arrivals(env, n_costumers, lambd, mu, server, wait_times):
     for i in range(n_costumers):
         e = event(env, server, mu, wait_times)
@@ -51,8 +77,7 @@ def statistical_analysis():
         lambd_c = lambd * c
         wait_times = experiment(lambd_c, mu, c, n_customers)
         df[f"{c}"] = wait_times
-    print("Var: \n", df.var())
-    print("Mean: \n", df.mean())
+
     res2 = welchs_test(df["2"], df["1"])
     res4 = welchs_test(df["4"], df["1"])
     print("Welch test results 2 vs 1: ", res2.statistic, ", p-value: ", res2.pvalue)
@@ -103,10 +128,12 @@ if __name__ == '__main__':
     n_servers_values = [1, 2, 4]
     n_customers = 1000
 
+
+
     # Welch test: 2 vs 1 server, 4 vs 1 server
-    statistical_analysis()
+    #statistical_analysis()
     # Run simulation with different rho/num_server - configurations
-    rho_values, all_means = simulate()
+    #rho_values, all_means = simulate()
     # Plot simulated results
-    plot_results(rho_values, all_means)
+    #plot_results(rho_values, all_means)
 
