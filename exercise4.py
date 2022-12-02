@@ -75,17 +75,17 @@ def plot_results(df):
     plt.ylabel("E(W)")
     plt.title("Hyperexponential (mean = 2)")
     plt.xlabel(r"Occupation rates of a single server ($\rho$)")
-    plt.savefig("figures/Simulated_waiting_times_incl_distributions.png")
+    plt.savefig("figures/Simulated_waiting_times_distributions_mu2.png")
     plt.show()
 
 if __name__ == '__main__':
-    mu = 2  # server capacity (rate, e.g. 1.2 customers/unit time)
+    mu = 1  # server capacity (rate, e.g. 1.2 customers/unit time)
     n_servers_values = [1, 2, 4]
     n_customers = 1000
 
     # Run simulation with different rho/num_server - configurations
-    df = simulate()
-    df.to_csv("Simulated_data_nservers_rho_dist_mu2.csv")
-    # df = pd.read_csv("Simulated_data_nservers_rho_dist.csv")
+    #df = simulate()
+    #df.to_csv("Simulated_data_nservers_rho_dist_mu2.csv")
+    df = pd.read_csv("Simulated_data_nservers_rho_dist_mu2.csv")
     # Plot simulated results
     plot_results(df)

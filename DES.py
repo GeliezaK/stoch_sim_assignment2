@@ -1,9 +1,6 @@
 import random
-import pandas as pd
-import simpy
 import numpy as np
-import matplotlib.pyplot as plt
-from scipy.stats import ttest_ind
+import simpy
 
 
 def __markov_sampler__(lambd):
@@ -96,13 +93,13 @@ class DES:
         if name == "markov":
             dist = lambda: __markov_sampler__(1 / self.mu)
         elif name == "hyper":
-            dist = lambda: __hyperexp_sampler__([0.75, 1], [5, 0.2])
+            dist = lambda: __hyperexp_sampler__([0.75, 1], [1, 0.2])
         else:
             dist = lambda: __deterministic_sampler__(self.mu)
         return dist
 
 
 if __name__ == '__main__':
-    des = DES(1, 1000, 2, 'hyper')
+    des = DES(mu =1, n_customers=1000, n_servers= 2, service_rate_dist='hyper')
     wait_times = des.experiment(0.9)
     print(wait_times)
