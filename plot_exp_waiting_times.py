@@ -9,19 +9,25 @@ def delay_probability(c, p):
     factor2 = 1/(factor21 + factor1)
     return factor1 * factor2
 
+
 def expected_waiting_time(c, p, mu):
     """Equation 5.3 from Queuing Theory Background Material 2 (page 44)"""
     return delay_probability(c, p) * 1/ (1 - p) * 1/(c * mu)
 
+
 def plot_expected_wait_times():
     occupation_rates = np.arange(0,1,0.05)
-    plt.plot(occupation_rates, expected_waiting_time(1, occupation_rates, 1), 'o-', label="1 Server")
-    plt.plot(occupation_rates, expected_waiting_time(2, occupation_rates, 1), 'o-', label="2 Servers")
-    plt.plot(occupation_rates, expected_waiting_time(4, occupation_rates, 1), 'o-', label="4 Servers")
-    plt.legend()
+    plt.plot(occupation_rates, expected_waiting_time(1, occupation_rates, 1), 'o-', label="1")
+    plt.plot(occupation_rates, expected_waiting_time(2, occupation_rates, 1), 'o-', label="2")
+    plt.plot(occupation_rates, expected_waiting_time(4, occupation_rates, 1), 'o-', label="4")
+    plt.legend(title="Number of Servers")
     plt.ylabel("Average waiting times E(W)")
+    plt.xticks(np.arange(0,1.1,0.1))
+    plt.title("Calculated Average Waiting Times")
     plt.xlabel(r"Occupation rates of a single server ($\rho$)")
+    plt.savefig("figures/calculated_mean_waitingtimes.png")
     plt.show()
+
 
 if __name__ == '__main__':
     plot_expected_wait_times()

@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 from scipy.stats import ttest_ind
 
 
-
 def arrivals(env, n_costumers, lambd, mu, server, wait_times):
     for i in range(n_costumers):
         e = event(env, server, mu, wait_times)
@@ -87,7 +86,7 @@ if __name__ == '__main__':
     for i, mean in enumerate(all_means):
         plt.plot(lambd_values, mean, "-o", label=n_servers_values[i])
     plt.legend(title="Number of servers")
-    plt.title("Simulated mean waiting times")
+    plt.title("Simulated Average Waiting Times")
     plt.ylabel("Average waiting times E(W)")
     plt.xlabel(r"Occupation rates of a single server ($\rho$)")
     plt.savefig("figures/Simulated_waiting_times.png")
