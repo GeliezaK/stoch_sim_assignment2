@@ -1,7 +1,9 @@
 import numpy as np
 import random
 import matplotlib.pyplot as plt
-from DES import hyperexp_sampler
+import pandas as pd
+
+from DES import hyperexp_sampler, init_service_rate_dist
 
 
 def test_hyperexp_sampler():
@@ -13,3 +15,18 @@ def test_hyperexp_sampler():
 
     # Expected means of distributions are 2, 1, 5
     assert np.isclose(np.mean(res_hyper), 2, rtol=0.1), f"Expected mean was 2, but actual mean is {np.mean(res_hyper)}"
+
+
+def test_init_service_rate_dist():
+    dist = init_service_rate_dist("markov", 0.9)
+    assert dist() != dist()
+    dist = init_service_rate_dist("hyper")
+    assert dist() != dist()
+    dist = init_service_rate_dist("deterministic", 5)
+    assert dist() == dist() == 5
+
+def test_pandas_concat():
+    df = pd.DataFrame(columns=["n_servers", "service_rate_distribution", "rho", "avg_waiting_time"])
+    newrow = pd.DataFrame([[2, 'markov', 0.5, 7]], columns=["n_servers", "service_rate_distribution", "rho", "avg_waiting_time"])
+    df = pd.concat([df, newrow], ignore_index=True)
+    print(df)

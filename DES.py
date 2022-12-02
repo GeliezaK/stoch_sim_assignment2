@@ -6,17 +6,17 @@ import matplotlib.pyplot as plt
 from scipy.stats import ttest_ind
 
 
-def markov_sampler(lambd):
+def __markov_sampler__(lambd):
     """Return a value from a Markov distribution A(t) = 1 - e^(-lambd*t)."""
     return random.expovariate(lambd)
 
 
-def constant_sampler(value):
+def __deterministic_sampler__(value):
     """Return a value from the deterministic distribution, i.e. the constant value."""
     return value
 
 
-def hyperexp_sampler(distribution, lambdas):
+def __hyperexp_sampler__(distribution, lambdas):
     """Return a composed exponential distribution.
 
     :param distribution: array-like, contains the cumulative probabilities for each exponential distribution.
@@ -32,108 +32,77 @@ def hyperexp_sampler(distribution, lambdas):
     return random.expovariate(lambdas[ind])
 
 
-def arrivals(env, n_costumers, lambd, mu, server, wait_times):
-    for i in range(n_costumers):
-        e = event(env, server, mu, wait_times)
-        env.process(e)
-        inter_arrival_time = random.expovariate(lambd)
-        yield env.timeout(inter_arrival_time)
+class DES:
+    def __init__(self, mu, n_customers, n_servers, service_rate_dist):
+        self.mu = mu
+        self.n_customers = n_customers
+        self.n_servers = n_servers
+        self.service_rate_dist = service_rate_dist
 
+    def __arrivals__(self, env, lambd, server, wait_times):
+        """
+        :param env:
+        :param n_costumers:
+        :param lambd:
+        :param server:
+        :param wait_times:
+        :param service_rate_dist: Function that returns a random variable from a certain distribution.
+        :return:
+        """
+        for i in range(self.n_customers):
+            e = self.__event__(env, server, wait_times)
+            env.process(e)
+            inter_arrival_time = random.expovariate(lambd)
+            yield env.timeout(inter_arrival_time)
 
-def event(env, server, mu, wait_times):
-    arrive = env.now
+    def __event__(self, env, server, wait_times):
+        """
+        :param service_rate_dist: Function that generates a random number from the service rate distribution.
+        :param env:
+        :param server:
+        :param wait_times:
+        :return:
+        """
+        # Init service rate distribution
+        dist = self.__init_service_rate_dist__(self.service_rate_dist)
+        arrive = env.now
 
-    with server.request() as req:
-        yield req
-        
-        service_duration = random.expovariate(mu)
-        end_queue = env.now
-        wait_times.append(end_queue - arrive)
+        with server.request() as req:
+            yield req
 
-        yield env.timeout(service_duration)
+            service_duration = dist()
+            end_queue = env.now
+            wait_times.append(end_queue - arrive)
 
+            yield env.timeout(service_duration)
 
-def experiment(l, mu, n_servers, n_customers):
-    """Run a single DES simulation with the parameters rho=l/mu, number of servers n_servers and number of customers
-    n_customers. Return a list (of size n_customers) that stores the waiting times per customer. """
-    wait_times = []
-    env = simpy.Environment()
-    server = simpy.Resource(env, capacity=n_servers)
-    env.process(arrivals(env, n_customers, l, mu, server, wait_times))
-    env.run()
-    return wait_times
+    def experiment(self, l):
+        """Run a single DES simulation with the parameters rho=l/mu, number of servers n_servers and number of customers
+        n_customers. Return a list (of size n_customers) that stores the waiting times per customer. """
+        assert 0 <= l / (self.mu * self.n_servers) <= 1
+        wait_times = []
+        env = simpy.Environment()
+        server = simpy.Resource(env, capacity=self.n_servers)
+        env.process(self.__arrivals__(env, l, server, wait_times))
+        env.run()
+        return wait_times
 
+    def __init_service_rate_dist__(self, name):
+        """Initialize the service rate distribution with mean 2.
 
-def welchs_test(groupA, groupB):
-    """Perform Welch's t-test since the variances are not equal accross groups. """
-    return ttest_ind(groupA, groupB, equal_var=False)
-
-
-def statistical_analysis():
-    """Perform Statistical test with 2 vs. 1 server and 4 vs. 1 server"""
-    df = pd.DataFrame()
-    lambd = 0.9
-    for c in n_servers_values:
-        lambd_c = lambd * c
-        wait_times = experiment(lambd_c, mu, c, n_customers)
-        df[f"{c}"] = wait_times
-
-    res2 = welchs_test(df["2"], df["1"])
-    res4 = welchs_test(df["4"], df["1"])
-    print("Welch test results 2 vs 1: ", res2.statistic, ", p-value: ", res2.pvalue)
-    print("Welch test results 4 vs 1: ", res4.statistic, ", p-value: ", res4.pvalue)
-
-
-def simulate():
-    """Simulate multiple times for different rhos/lambdas and numbers of servers. Return the average waiting times of
-     each configuration."""
-    rho_values = np.arange(0.05, 1, 0.05) #effectively, this manipulates rho values since mu is always constant
-    n_simulations = 25
-    data = np.zeros((len(n_servers_values), len(rho_values), n_simulations, n_customers))
-    for servers_i, n_servers in enumerate(n_servers_values):
-        print("Number of servers : ", n_servers)
-        for rho_i, rhov in enumerate(rho_values):
-            lambd_c = rhov * n_servers * mu
-            print("Rho = ", rhov)
-            # Asser that rho=lambda/mu*n still holds
-            assert rhov == lambd_c/(n_servers * mu)
-            # Simulate n_simulations time and collect results
-            for simulation in range(n_simulations):
-                wait_times = experiment(lambd_c, mu, n_servers, n_customers)
-                data[servers_i, rho_i, simulation] = wait_times
-
-    # Calculate means over all simulations and over all customers in each simulation
-    all_means = []
-    for n_servers in data:
-        all_means.append(np.mean(n_servers, axis=(1, 2)))
-
-    return rho_values, all_means
-
-
-def plot_results(rho_values, all_means):
-    """Plot the mean waiting times against the number of servers and the rho values."""
-    for i, mean in enumerate(all_means):
-        plt.plot(rho_values, mean, "-o", label=n_servers_values[i]) #lambda values are equal to rho values since we keep mu=1
-    plt.legend(title="Number of servers")
-    plt.xticks(np.arange(0,1.1,0.1))
-    plt.title("Simulated Average Waiting Times")
-    plt.ylabel("Average waiting times E(W)")
-    plt.xlabel(r"Occupation rates of a single server ($\rho$)")
-    plt.savefig("figures/Simulated_waiting_times.png")
-    plt.show()
+        :param name: String, the name of the service name distribution. Either "markov", "deterministic" or "hyper"
+        :return: a function that generates a random number from the desired distribution
+        """
+        if name == "markov":
+            dist = lambda: __markov_sampler__(1 / self.mu)
+        elif name == "hyper":
+            dist = lambda: __hyperexp_sampler__([0.75, 1], [5, 0.2])
+        else:
+            dist = lambda: __deterministic_sampler__(self.mu)
+        return dist
 
 
 if __name__ == '__main__':
-    mu = 1  # server capacity (rate, e.g. 1.2 customers/unit time)
-    n_servers_values = [1, 2, 4]
-    n_customers = 1000
-
-
-
-    # Welch test: 2 vs 1 server, 4 vs 1 server
-    #statistical_analysis()
-    # Run simulation with different rho/num_server - configurations
-    #rho_values, all_means = simulate()
-    # Plot simulated results
-    #plot_results(rho_values, all_means)
-
+    des = DES(1, 1000, 2, 'hyper')
+    wait_times = des.experiment(0.9)
+    print(wait_times)
