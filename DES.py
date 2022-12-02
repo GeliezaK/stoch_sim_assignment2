@@ -62,28 +62,33 @@ def statistical_analysis():
 def simulate():
     """Simulate multiple times for different rhos/lambdas and numbers of servers. Return the average waiting times of
      each configuration."""
-    lambd_values = np.arange(0.05, 1, 0.05) #effectively, this manipulates rho values since mu is always constant
+    rho_values = np.arange(0.05, 1, 0.05) #effectively, this manipulates rho values since mu is always constant
     n_simulations = 25
-    data = np.zeros((len(n_servers_values), len(lambd_values), n_simulations, n_customers))
+    data = np.zeros((len(n_servers_values), len(rho_values), n_simulations, n_customers))
     for servers_i, n_servers in enumerate(n_servers_values):
         print("Number of servers : ", n_servers)
-        for lambd_i, lambd in enumerate(lambd_values):
-            lambd_c = lambd * n_servers
-            print("Rho = ", np.round(lambd_c / (mu * n_servers), 3))
+        for rho_i, rhov in enumerate(rho_values):
+            lambd_c = rhov * n_servers * mu
+            print("Rho = ", rhov)
+            # Asser that rho=lambda/mu*n still holds
+            assert rhov == lambd_c/(n_servers * mu)
+            # Simulate n_simulations time and collect results
             for simulation in range(n_simulations):
                 wait_times = experiment(lambd_c, mu, n_servers, n_customers)
-                data[servers_i, lambd_i, simulation] = wait_times
+                data[servers_i, rho_i, simulation] = wait_times
+
+    # Calculate means over all simulations and over all customers in each simulation
     all_means = []
     for n_servers in data:
         all_means.append(np.mean(n_servers, axis=(1, 2)))
 
-    return lambd_values, all_means
+    return rho_values, all_means
 
 
-def plot_results(lambd_values, all_means):
+def plot_results(rho_values, all_means):
     """Plot the mean waiting times against the number of servers and the rho values."""
     for i, mean in enumerate(all_means):
-        plt.plot(lambd_values, mean, "-o", label=n_servers_values[i]) #lambda values are equal to rho values since we keep mu=1
+        plt.plot(rho_values, mean, "-o", label=n_servers_values[i]) #lambda values are equal to rho values since we keep mu=1
     plt.legend(title="Number of servers")
     plt.xticks(np.arange(0,1.1,0.1))
     plt.title("Simulated Average Waiting Times")
@@ -101,7 +106,7 @@ if __name__ == '__main__':
     # Welch test: 2 vs 1 server, 4 vs 1 server
     statistical_analysis()
     # Run simulation with different rho/num_server - configurations
-    lambd_values, all_means = simulate()
+    rho_values, all_means = simulate()
     # Plot simulated results
-    plot_results(lambd_values, all_means)
+    plot_results(rho_values, all_means)
 
