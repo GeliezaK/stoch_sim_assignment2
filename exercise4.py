@@ -4,7 +4,7 @@ import pandas as pd
 from DES import DES
 
 
-def compute_avg_waiting_time(n_servers, rhov, dist):
+def compute_avg_waiting_time(mu, n_customers, n_servers, rhov, dist):
     """Compute average waiting time per configuration (Number of servers, Rho, Service time distribution)"""
     n_simulations = 25
     lambd_c = rhov * n_servers * mu
@@ -33,7 +33,7 @@ def simulate():
             print("Rho = ", rhov)
             for dist_name in distributions:
                 print("Service Rate Distribution =", dist_name)
-                avg_waiting_time = compute_avg_waiting_time(n_servers, rhov, dist_name)
+                avg_waiting_time = compute_avg_waiting_time(mu, n_customers, n_servers, rhov, dist_name)
                 newrow = pd.DataFrame([[n_servers, dist_name, rhov, avg_waiting_time]],
                                       columns=["n_servers", "service_rate_distribution", "rho", "avg_waiting_time"])
                 df = pd.concat([df, newrow], ignore_index=True)

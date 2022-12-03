@@ -85,7 +85,7 @@ class DES:
         return wait_times
 
     def __init_service_rate_dist__(self, name):
-        """Initialize the service rate distribution with mean 2.
+        """Initialize the service rate distribution.
 
         :param name: String, the name of the service name distribution. Either "markov", "deterministic" or "hyper"
         :return: a function that generates a random number from the desired distribution

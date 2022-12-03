@@ -3,7 +3,7 @@ import random
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from DES import hyperexp_sampler, init_service_rate_dist
+from DES import DES
 
 
 def test_hyperexp_sampler():
