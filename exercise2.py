@@ -1,7 +1,7 @@
 import pandas as pd
 from scipy.stats import ttest_ind
 from DES import DES
-from exercise4 import compute_avg_waiting_time
+from exercise4 import compute_avg_waiting_time, calculate_error
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -11,16 +11,16 @@ def simulate():
      each configuration."""
 
     rho_values = np.arange(0.05, 1, 0.05)
-    df = pd.DataFrame(columns=["n_servers", "rho", "avg_waiting_time"])
+    df = pd.DataFrame(columns=["n_servers", "rho", "avg_waiting_time", "var_waiting_time"])
 
     # Run n_simulations simulations for every configuration (n_servers, rho)
     for servers_i, n_servers in enumerate(n_servers_values):
         print("Number of servers : ", n_servers)
         for rho_i, rhov in enumerate(rho_values):
             print("Rho = ", rhov)
-            avg_waiting_time = compute_avg_waiting_time(mu, n_customers, n_servers, rhov, 'markov')
-            newrow = pd.DataFrame([[n_servers, rhov, avg_waiting_time]],
-                                  columns=["n_servers", "rho", "avg_waiting_time"])
+            avg_waiting_time, var_waiting_time = compute_avg_waiting_time(mu, n_customers, n_servers, rhov, 'markov')
+            newrow = pd.DataFrame([[n_servers, rhov, avg_waiting_time, var_waiting_time]],
+                                  columns=["n_servers", "rho", "avg_waiting_time", "var_waiting_time"])
             df = pd.concat([df, newrow], ignore_index=True)
     return df
 
@@ -49,11 +49,13 @@ def statistical_analysis():
 
 def plot_results(df):
     """Plot the mean waiting times against the number of servers and the rho values."""
-
     for i in n_servers_values:
         data = df[df['n_servers'] == i]
-        plt.plot(data['rho'], data['avg_waiting_time'], "o-", label=f"{i}")
+        errors = calculate_error(data['var_waiting_time'], n_customers)
+        plt.errorbar(data['rho'], data['avg_waiting_time'], yerr=errors, lolims=True, capsize=2,
+                     linestyle="-", marker="o", label=f"{i}")
     plt.legend(title="Number of servers")
+    plt.yscale('log')
     plt.xticks(np.arange(0, 1.1, 0.1))
     plt.title(f"Simulated Average Waiting Times \nfor Different Numbers of Servers")
     plt.ylabel(r"$\hat E(W)$")
@@ -66,7 +68,11 @@ if __name__ == '__main__':
     mu = 1  # server capacity (rate, e.g. 1.2 customers/unit time)
     n_servers_values = [1, 2, 4]
     n_customers = 1000
+    plt.style.use('seaborn-v0_8-paper')
 
     statistical_analysis()
-    df = simulate()
+    #df = simulate()
+    #df.to_csv("Simulated_data_nservers_rho_mu1.csv")
+    df = pd.read_csv("Simulated_data_nservers_rho_mu1.csv")
+    print(df.head())
     plot_results(df)

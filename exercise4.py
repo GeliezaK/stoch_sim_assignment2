@@ -14,7 +14,7 @@ def compute_avg_waiting_time(mu, n_customers, n_servers, rhov, dist):
     # Simulate n_simulations times and collect results
     for i in range(n_simulations):
         data[i, :] = des.experiment(lambd_c)
-    return np.mean(data)
+    return np.mean(data), np.var(data)
 
 
 def simulate():
@@ -24,7 +24,7 @@ def simulate():
     rho_values = np.arange(0.05, 1, 0.05)
     distributions = ["markov", "deterministic", "hyper"]
 
-    df = pd.DataFrame(columns=["n_servers", "service_rate_distribution", "rho", "avg_waiting_time"])
+    df = pd.DataFrame(columns=["n_servers", "service_rate_distribution", "rho", "avg_waiting_time", "var_waiting_time"])
 
     # Run n_simulations simulations for every configuration (n_servers, service_rate_distribution, rho)
     for servers_i, n_servers in enumerate(n_servers_values):
@@ -33,11 +33,17 @@ def simulate():
             print("Rho = ", rhov)
             for dist_name in distributions:
                 print("Service Rate Distribution =", dist_name)
-                avg_waiting_time = compute_avg_waiting_time(mu, n_customers, n_servers, rhov, dist_name)
-                newrow = pd.DataFrame([[n_servers, dist_name, rhov, avg_waiting_time]],
-                                      columns=["n_servers", "service_rate_distribution", "rho", "avg_waiting_time"])
+                avg_waiting_time, variance = compute_avg_waiting_time(mu, n_customers, n_servers, rhov, dist_name)
+                newrow = pd.DataFrame([[n_servers, dist_name, rhov, avg_waiting_time, variance]],
+                                      columns=["n_servers", "service_rate_distribution", "rho", "avg_waiting_time",
+                                               "var_waiting_time"])
                 df = pd.concat([df, newrow], ignore_index=True)
     return df
+
+
+def calculate_error(S, n):
+    """Calculate the error of the 95%-confidence interval."""
+    return 1.96 * (S / np.sqrt(n))
 
 
 def plot_results(df):
@@ -46,46 +52,57 @@ def plot_results(df):
     deterministic = df[df['service_rate_distribution'] == 'deterministic']
     hyper = df[df['service_rate_distribution'] == 'hyper']
 
-    plt.figure(figsize=(10, 10),layout="tight")
+    plt.figure(figsize=(7, 8), layout="tight")
     # Markov
     plt.subplot(311)
     for i in n_servers_values:
         data = markov[markov['n_servers'] == i]
-        plt.plot(data['rho'], data['avg_waiting_time'], "o-", label=f"{i}")
-    plt.legend(title="Number of servers")
+        errors = calculate_error(data['var_waiting_time'], n_customers)
+        plt.errorbar(data['rho'], data['avg_waiting_time'], yerr=errors, lolims=True, capsize=2,
+                     linestyle="-", marker="o", label=f"{i}")
+    plt.legend(title="Number of servers", loc="lower right")
+    plt.yscale('log')
     plt.xticks(np.arange(0, 1.1, 0.1))
-    plt.title(f"Exponential (mean = 2)")
-    plt.ylabel("E(W)")
+    plt.title(f"Exponential (mean = 1)")
+    plt.ylabel(r"$\hat E(W)$")
     # Deterministic
     plt.subplot(312)
     for i in n_servers_values:
         data = deterministic[deterministic['n_servers'] == i]
-        plt.plot(data['rho'], data['avg_waiting_time'], "o-", label=f"{i}")
-    plt.legend(title="Number of servers")
+        errors = calculate_error(data['var_waiting_time'], n_customers)
+        plt.errorbar(data['rho'], data['avg_waiting_time'], yerr=errors, lolims=True, capsize=2,
+                     linestyle="-", marker="o", label=f"{i}")
+    plt.legend(title="Number of servers", loc="lower right")
+    plt.yscale('log')
     plt.xticks(np.arange(0, 1.1, 0.1))
-    plt.ylabel("E(W)")
-    plt.title(f"Deterministic (mean = 2)")
+    plt.ylabel(r"$\hat E(W)$")
+    plt.title(f"Deterministic (mean = 1)")
     # Hyper
     plt.subplot(313)
     for i in n_servers_values:
         data = hyper[hyper['n_servers'] == i]
-        plt.plot(data['rho'], data['avg_waiting_time'], "o-", label=f"{i}")
-    plt.legend(title="Number of servers")
+        errors = calculate_error(data['var_waiting_time'], n_customers)
+        plt.errorbar(data['rho'], data['avg_waiting_time'], yerr=errors, lolims=True, capsize=2,
+                     linestyle="-", marker="o", label=f"{i}")
+    plt.legend(title="Number of servers", loc="lower right")
+    plt.yscale('log')
     plt.xticks(np.arange(0, 1.1, 0.1))
-    plt.ylabel("E(W)")
+    plt.ylabel(r"$\hat E(W)$")
     plt.title("Hyperexponential (mean = 2)")
     plt.xlabel(r"Occupation rates of a single server ($\rho$)")
-    plt.savefig("figures/Simulated_waiting_times_distributions_mu2.png")
+    plt.savefig("figures/Simulated_waiting_times_distributions_mu1_log.png")
     plt.show()
+
 
 if __name__ == '__main__':
     mu = 1  # server capacity (rate, e.g. 1.2 customers/unit time)
     n_servers_values = [1, 2, 4]
     n_customers = 1000
+    plt.style.use('seaborn-v0_8-paper')
 
     # Run simulation with different rho/num_server - configurations
-    #df = simulate()
-    #df.to_csv("Simulated_data_nservers_rho_dist_mu2.csv")
-    df = pd.read_csv("Simulated_data_nservers_rho_dist_mu2.csv")
+    # df = simulate()
+    # df.to_csv("Simulated_data_nservers_rho_dist_mu1.csv")
+    df = pd.read_csv("Simulated_data_nservers_rho_dist_mu1.csv")
     # Plot simulated results
     plot_results(df)

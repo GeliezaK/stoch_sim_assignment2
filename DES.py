@@ -1,5 +1,6 @@
 import random
 import numpy as np
+import matplotlib.pyplot as plt
 import simpy
 
 
@@ -102,4 +103,6 @@ class DES:
 if __name__ == '__main__':
     des = DES(mu =1, n_customers=1000, n_servers= 2, service_rate_dist='hyper')
     wait_times = des.experiment(0.9)
+    plt.hist(wait_times)
+    plt.show()
     print(wait_times)
