@@ -43,7 +43,7 @@ def simulate():
 
 def calculate_error(S, n):
     """Calculate the error of the 95%-confidence interval."""
-    return 1.96 * (S / np.sqrt(n))
+    return 1.96 * (np.sqrt(S) / np.sqrt(n))
 
 
 def plot_results(df):
@@ -58,10 +58,9 @@ def plot_results(df):
     for i in n_servers_values:
         data = markov[markov['n_servers'] == i]
         errors = calculate_error(data['var_waiting_time'], n_customers)
-        plt.errorbar(data['rho'], data['avg_waiting_time'], yerr=errors, lolims=True, capsize=2,
+        plt.errorbar(data['rho'], data['avg_waiting_time'], yerr=errors, capsize=2,
                      linestyle="-", marker="o", label=f"{i}")
-    plt.legend(title="Number of servers", loc="lower right")
-    plt.yscale('log')
+    plt.legend(title="Number of servers", loc="upper left")
     plt.xticks(np.arange(0, 1.1, 0.1))
     plt.title(f"Exponential (mean = 1)")
     plt.ylabel(r"$\hat E(W)$")
@@ -70,10 +69,9 @@ def plot_results(df):
     for i in n_servers_values:
         data = deterministic[deterministic['n_servers'] == i]
         errors = calculate_error(data['var_waiting_time'], n_customers)
-        plt.errorbar(data['rho'], data['avg_waiting_time'], yerr=errors, lolims=True, capsize=2,
+        plt.errorbar(data['rho'], data['avg_waiting_time'], yerr=errors, capsize=2,
                      linestyle="-", marker="o", label=f"{i}")
-    plt.legend(title="Number of servers", loc="lower right")
-    plt.yscale('log')
+    plt.legend(title="Number of servers", loc="upper left")
     plt.xticks(np.arange(0, 1.1, 0.1))
     plt.ylabel(r"$\hat E(W)$")
     plt.title(f"Deterministic (mean = 1)")
@@ -82,10 +80,9 @@ def plot_results(df):
     for i in n_servers_values:
         data = hyper[hyper['n_servers'] == i]
         errors = calculate_error(data['var_waiting_time'], n_customers)
-        plt.errorbar(data['rho'], data['avg_waiting_time'], yerr=errors, lolims=True, capsize=2,
+        plt.errorbar(data['rho'], data['avg_waiting_time'], yerr=errors, capsize=2,
                      linestyle="-", marker="o", label=f"{i}")
-    plt.legend(title="Number of servers", loc="lower right")
-    plt.yscale('log')
+    plt.legend(title="Number of servers", loc="upper left")
     plt.xticks(np.arange(0, 1.1, 0.1))
     plt.ylabel(r"$\hat E(W)$")
     plt.title("Hyperexponential (mean = 2)")
@@ -98,7 +95,7 @@ if __name__ == '__main__':
     mu = 1  # server capacity (rate, e.g. 1.2 customers/unit time)
     n_servers_values = [1, 2, 4]
     n_customers = 1000
-    plt.style.use('seaborn-v0_8-paper')
+    #plt.style.use('seaborn-v0_8-paper')
 
     # Run simulation with different rho/num_server - configurations
     # df = simulate()

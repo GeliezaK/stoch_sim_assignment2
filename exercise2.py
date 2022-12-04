@@ -33,7 +33,7 @@ def welchs_test(groupA, groupB):
 def statistical_analysis():
     """Perform Statistical test with 2 vs. 1 server and 4 vs. 1 server"""
     df = pd.DataFrame()
-    rho = 0.9
+    rho = 0.1
 
     for c in n_servers_values:
         lambd_c = rho * c * mu
@@ -52,10 +52,9 @@ def plot_results(df):
     for i in n_servers_values:
         data = df[df['n_servers'] == i]
         errors = calculate_error(data['var_waiting_time'], n_customers)
-        plt.errorbar(data['rho'], data['avg_waiting_time'], yerr=errors, lolims=True, capsize=2,
+        plt.errorbar(data['rho'], data['avg_waiting_time'], yerr=errors, capsize=2,
                      linestyle="-", marker="o", label=f"{i}")
     plt.legend(title="Number of servers")
-    plt.yscale('log')
     plt.xticks(np.arange(0, 1.1, 0.1))
     plt.title(f"Simulated Average Waiting Times \nfor Different Numbers of Servers")
     plt.ylabel(r"$\hat E(W)$")
@@ -67,12 +66,12 @@ def plot_results(df):
 if __name__ == '__main__':
     mu = 1  # server capacity (rate, e.g. 1.2 customers/unit time)
     n_servers_values = [1, 2, 4]
-    n_customers = 1000
-    plt.style.use('seaborn-v0_8-paper')
+    n_customers = 100
+    #plt.style.use('seaborn-v0_8-paper')
 
     statistical_analysis()
     #df = simulate()
     #df.to_csv("Simulated_data_nservers_rho_mu1.csv")
     df = pd.read_csv("Simulated_data_nservers_rho_mu1.csv")
-    print(df.head())
+    #print(df.head())
     plot_results(df)
