@@ -10,33 +10,63 @@ def simulate():
      each configuration."""
 
     rho_values = np.arange(0.05, 1, 0.05)
-    df = pd.DataFrame(columns=["sorting", "rho", "avg_waiting_time", "var_waiting_time"])
+    df = pd.DataFrame(columns=["sorting", "rho", "n_servers", "avg_waiting_time", "var_waiting_time"])
 
     # Run n_simulations simulations for every configuration (n_servers, rho)
     for i, sorting_method in enumerate(sorting_methods):
         print("Sorting method: ", sorting_method)
         for rho_i, rhov in enumerate(rho_values):
-            print("Rho = ", rhov)
-            avg_waiting_time, var_waiting_time = compute_avg_waiting_time(mu, n_customers, n_servers, rhov, 'markov', sorting_method=sorting_method)
-            newrow = pd.DataFrame([[sorting_method, rhov, avg_waiting_time, var_waiting_time]],
-                                  columns=["sorting_method", "rho", "avg_waiting_time", "var_waiting_time"])
-            df = pd.concat([df, newrow], ignore_index=True)
+            for c in n_server_values:
+                print("Rho = ", rhov)
+                avg_waiting_time, var_waiting_time = compute_avg_waiting_time(mu, n_customers, c, rhov, 'markov', sorting_method=sorting_method)
+                newrow = pd.DataFrame([[sorting_method, rhov, c, avg_waiting_time, var_waiting_time]],
+                                  columns=["sorting_method", "rho", "n_servers", "avg_waiting_time", "var_waiting_time"])
+                df = pd.concat([df, newrow], ignore_index=True)
     return df
+
+
+def get_style(sorting_method, n_servers):
+    if sorting_method=="none":
+        marker = 'o'
+        linestyle ='--'
+    else:
+        marker = 'x'
+        linestyle= ':'
+    # Get color cycle
+    prop_cycle = plt.rcParams['axes.prop_cycle']
+    colors = prop_cycle.by_key()['color']
+    if n_servers == 1:
+        color = colors[0]
+    elif n_servers ==2:
+        color = colors[1]
+    else:
+        color = colors[2]
+
+    return marker, color, linestyle
+
+
 
 
 def plot_results(df):
     """Plot the mean waiting times against the number of servers and the rho values."""
-    for i in sorting_methods:
-        data = df[df['sorting_method'] == i]
-        errors = calculate_error(data['var_waiting_time'], n_customers)
-        plt.errorbar(data['rho'], data['avg_waiting_time'], yerr=errors, lolims=True, capsize=2,
-                     linestyle="-", marker="o", label=f"{i}")
-    plt.legend(title="Number of servers")
-    plt.yscale('log')
-    plt.xticks(np.arange(0, 1.1, 0.1))
-    plt.title(f"Simulated Average Waiting Times \nfor Different Numbers of Servers")
-    plt.ylabel(r"$\hat E(W)$")
-    plt.xlabel(r"Occupation rates of a single server ($\rho$)")
+    plt.figure(figsize=(10,6))
+    for ind, i in enumerate(sorting_methods):
+        ax = plt.subplot(1,2,ind+1)
+        for c in n_server_values:
+            data = df[(df['sorting_method'] == i) & (df['n_servers'] == c)]
+            marker, color, linestyle = get_style(i, c)
+            errors = calculate_error(data['var_waiting_time'], n_customers)
+            ax.errorbar(data['rho'], data['avg_waiting_time'], yerr=errors, capsize=2,
+                     linestyle=linestyle, marker=marker, color=color, label=f"{c}")
+        plt.ylabel(r"$\hat E(W)$")
+        ax.legend(title="Number of servers")
+        plt.xticks(np.arange(0, 1.1, 0.1))
+        plt.ylim(-0.5,14.5)
+        if i == 'none':
+            plt.title("FIFO")
+        else:
+            plt.title("SJF")
+        plt.xlabel(r"System load ($\rho$)")
     plt.savefig("figures/Simulated_waiting_times_exercise3.png")
     plt.show()
 
@@ -45,12 +75,10 @@ if __name__ == '__main__':
     mu = 1  # server capacity (rate, e.g. 1.2 customers/unit time)
     sorting_methods = ["none", "shortest_first"]
     n_customers = 1000
-    n_servers = 1
-    plt.style.use('seaborn-v0_8-paper')
+    n_server_values = [1, 2, 4]
 
     # statistical_analysis()
-    df = simulate()
-    df.to_csv("Simulated_data_sorting_rho_mu1.csv")
-    # df = pd.read_csv("Simulated_data_nservers_rho_mu1.csv")
-    print(df.head())
+    #df = simulate()
+    #df.to_csv("Simulated_data_sorting_rho_mu1.csv")
+    df = pd.read_csv("Simulated_data_sorting_rho_mu1.csv")
     plot_results(df)
