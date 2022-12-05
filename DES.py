@@ -31,11 +31,12 @@ def __hyperexp_sampler__(distribution, lambdas):
 
 
 class DES:
-    def __init__(self, mu, n_customers, n_servers, service_rate_dist):
+    def __init__(self, mu, n_customers, n_servers, service_rate_dist, sorting_method="none"):
         self.mu = mu
         self.n_customers = n_customers
         self.n_servers = n_servers
         self.service_rate_dist = service_rate_dist
+        self.sorting_method = sorting_method
 
     def __arrivals__(self, env, lambd, server, wait_times):
         """
@@ -63,16 +64,25 @@ class DES:
         """
         # Init service rate distribution
         dist = self.__init_service_rate_dist__(self.service_rate_dist)
+        service_duration = dist()
         arrive = env.now
 
-        with server.request() as req:
-            yield req
+        if self.sorting_method == "none":
+            with server.request() as req:
+                yield req
 
-            service_duration = dist()
-            end_queue = env.now
-            wait_times.append(end_queue - arrive)
+                end_queue = env.now
+                wait_times.append(end_queue - arrive)
 
-            yield env.timeout(service_duration)
+                yield env.timeout(service_duration)
+        elif self.sorting_method == "shortest_first":
+            with server.request(priority=round(service_duration*1000000)) as req:
+                yield req
+
+                end_queue = env.now
+                wait_times.append(end_queue - arrive)
+
+                yield env.timeout(service_duration)
 
     def experiment(self, l):
         """Run a single DES simulation with the parameters rho=l/mu, number of servers n_servers and number of customers
@@ -80,7 +90,10 @@ class DES:
         assert 0 <= l / (self.mu * self.n_servers) <= 1
         wait_times = []
         env = simpy.Environment()
-        server = simpy.Resource(env, capacity=self.n_servers)
+        if self.sorting_method == "none":
+            server = simpy.Resource(env, capacity=self.n_servers)
+        elif self.sorting_method == "shortest_first":
+            server = simpy.PriorityResource(env, capacity=self.n_servers)
         env.process(self.__arrivals__(env, l, server, wait_times))
         env.run()
         return wait_times

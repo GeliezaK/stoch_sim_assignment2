@@ -5,13 +5,13 @@ import pandas as pd
 from DES import DES
 
 
-def compute_avg_waiting_time(mu, n_customers, n_servers, rhov, dist):
+def compute_avg_waiting_time(mu, n_customers, n_servers, rhov, dist, sorting_method="none"):
     """Compute average waiting time per configuration (Number of servers, Rho, Service time distribution)"""
     n_simulations = 25
     lambd_c = rhov * n_servers * mu
     print("Lambda: ", lambd_c, ", Rho: ", np.round(lambd_c / (mu * n_servers), 3))
 
-    des = DES(mu, n_customers, n_servers, dist)
+    des = DES(mu, n_customers, n_servers, dist, sorting_method)
     data = np.zeros((n_simulations, n_customers))
     # Simulate n_simulations times and collect results
     for i in range(n_simulations):
