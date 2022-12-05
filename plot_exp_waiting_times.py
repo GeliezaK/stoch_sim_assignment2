@@ -17,17 +17,17 @@ def expected_waiting_time(c, p, mu):
 
 def plot_expected_wait_times():
     """Calculate the average waiting times from the equations for different rho and plot them. """
-    occupation_rates = np.arange(0,1,0.05)
+    occupation_rates = np.arange(0.05,1,0.05)
     print(occupation_rates)
     plt.plot(occupation_rates, expected_waiting_time(1, occupation_rates, 1), 'o-', label="1")
     plt.plot(occupation_rates, expected_waiting_time(2, occupation_rates, 1), 'o-', label="2")
     plt.plot(occupation_rates, expected_waiting_time(4, occupation_rates, 1), 'o-', label="4")
     plt.legend(title="Number of Servers", loc="upper left")
-    plt.ylabel("Average waiting times E(W)")
+    plt.ylabel("Average Waiting Times $E(W)$")
     plt.xticks(np.arange(0,1.1,0.1))
     plt.title("Calculated Average Waiting Times")
     plt.xlabel(r"Occupation rates of a single server ($\rho$)")
-    plt.savefig("figures/calculated_mean_waitingtimes.png")
+    plt.savefig("figures/calculated_waiting_times.png")
     plt.show()
 
 

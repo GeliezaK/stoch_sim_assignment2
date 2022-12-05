@@ -5,7 +5,7 @@ import simpy
 
 
 def __markov_sampler__(lambd):
-    """Return a value from a Markov distribution A(t) = 1 - e^(-lambd*t)."""
+    """Return a value from an exponential distribution a(t) = lambd * e^(-lambd*t)."""
     return random.expovariate(lambd)
 
 
@@ -39,13 +39,13 @@ class DES:
 
     def __arrivals__(self, env, lambd, server, wait_times):
         """
-        :param env:
-        :param n_costumers:
-        :param lambd:
-        :param server:
-        :param wait_times:
+        :param env: SimPy environment
+        :param n_costumers: number of arrivals/jobs/customers in the whole system
+        :param lambd: arrival rate
+        :param server: SimPy resource
+        :param wait_times: array to write the waiting times in
         :param service_rate_dist: Function that returns a random variable from a certain distribution.
-        :return:
+        :return: timout of the length of the current inter-arrival time
         """
         for i in range(self.n_customers):
             e = self.__event__(env, server, wait_times)
@@ -56,10 +56,10 @@ class DES:
     def __event__(self, env, server, wait_times):
         """
         :param service_rate_dist: Function that generates a random number from the service rate distribution.
-        :param env:
-        :param server:
-        :param wait_times:
-        :return:
+        :param env: SimPy environment
+        :param server: SimPy resource
+        :param wait_times: list to write the wait times in
+        :return: timeout of the length of the current service-duration
         """
         # Init service rate distribution
         dist = self.__init_service_rate_dist__(self.service_rate_dist)
@@ -92,7 +92,7 @@ class DES:
         :return: a function that generates a random number from the desired distribution
         """
         if name == "markov":
-            dist = lambda: __markov_sampler__(1 / self.mu)
+            dist = lambda: __markov_sampler__(1/self.mu)
         elif name == "hyper":
             dist = lambda: __hyperexp_sampler__([0.75, 1], [1, 0.2])
         else:
@@ -101,8 +101,13 @@ class DES:
 
 
 if __name__ == '__main__':
-    des = DES(mu =1, n_customers=1000, n_servers= 2, service_rate_dist='hyper')
-    wait_times = des.experiment(0.9)
+    mu = 1
+    n_servers = 2
+    des = DES(mu =mu, n_customers=1000, n_servers= n_servers, service_rate_dist='markov')
+    rho = 0.9
+    lambd = n_servers*rho*mu
+    wait_times = des.experiment(lambd)
     plt.hist(wait_times)
     plt.show()
     print(wait_times)
+    print(np.mean(wait_times))
