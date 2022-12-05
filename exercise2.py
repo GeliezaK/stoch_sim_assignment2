@@ -68,7 +68,6 @@ if __name__ == '__main__':
     # Welch test with single rho value
     statistical_analysis()
 
-
     # Simulations over multiple rho values
     df = simulate()
     df.to_csv("Simulated_data_nservers_rho_mu1.csv")

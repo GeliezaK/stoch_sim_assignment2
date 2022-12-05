@@ -183,7 +183,9 @@ if __name__ == '__main__':
 
     # Statistical analysis
     df = get_waiting_times(0.9)
+    # Store the results in csv to avoid multiple simulation
     df.to_csv("waiting_times_rho09.csv")
+    # Read the results from csv to pandas if it has been simulated before
     #df = pd.read_csv("waiting_times_rho09.csv")
     print_stats(df, 'hyper', 'deterministic',4 )
     print_stats(df, 'hyper', 'deterministic',2 )
